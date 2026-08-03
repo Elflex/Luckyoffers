@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Airtel Airtime Bonus — Claim Your ₦5,000 Reward</title>
+<title>Airtel Airtime Bonus — Claim Your Reward</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Manrope:wght@400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
@@ -291,28 +291,106 @@
   footer .wrap{display:flex;flex-direction:column;gap:10px;font-size:12px;}
   footer .disclaimer{max-width:70ch;line-height:1.6;}
 
-  /* ---------- sticky mobile cta ---------- */
-  .sticky-cta{
-    position:fixed;bottom:0;left:0;right:0;
-    background:var(--ink);
-    border-top:1px solid rgba(232,206,122,0.25);
-    padding:12px 16px;
-    display:none;
-    align-items:center;justify-content:space-between;
-    gap:12px;
-    z-index:50;
+  /* ---------- MODAL STYLES ---------- */
+  .modal-overlay {
+    position:fixed;top:0;left:0;right:0;bottom:0;
+    background:rgba(0,0,0,0.75);
+    backdrop-filter:blur(6px);
+    display:flex;align-items:center;justify-content:center;
+    z-index:9999;
+    padding:20px;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.4s ease;
   }
-  .sticky-cta .amount-tag{color:var(--cream);font-family:'Fraunces',serif;font-weight:700;font-size:15px;}
-  .sticky-cta .amount-tag span{color:var(--gold-soft);}
-  .sticky-cta .btn-primary{padding:11px 18px;font-size:13.5px;}
+  .modal-overlay.active {
+    opacity:1;pointer-events:auto;
+  }
+  .modal-box {
+    background:var(--cream);
+    border-radius:20px;
+    max-width:480px;
+    width:100%;
+    padding:36px 32px 32px;
+    box-shadow:0 40px 80px rgba(0,0,0,0.6);
+    position:relative;
+    transform:scale(0.92) translateY(18px);
+    transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);
+    text-align:center;
+  }
+  .modal-overlay.active .modal-box {
+    transform:scale(1) translateY(0);
+  }
+  .modal-box .icon {
+    font-size:52px;margin-bottom:12px;
+  }
+  .modal-box h2 {
+    font-size:24px;font-weight:700;margin-bottom:8px;color:var(--ink);
+  }
+  .modal-box p {
+    color:#5c564c;font-size:15px;margin-bottom:20px;line-height:1.5;
+  }
+  .modal-box .btn-primary {
+    width:100%;justify-content:center;font-size:16px;padding:16px;
+  }
+  .modal-close {
+    position:absolute;top:12px;right:18px;
+    background:none;border:none;font-size:24px;color:#5c564c;
+    cursor:pointer;font-family:'Fraunces',serif;line-height:1;
+  }
+  .modal-close:hover{color:var(--ink);}
+
+  /* ---------- CONFETTI ---------- */
+  .confetti-container {
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    pointer-events:none;z-index:9998;overflow:hidden;
+  }
+  .confetti {
+    position:absolute;top:-10px;
+    width:10px;height:10px;
+    border-radius:2px;
+    animation:confettiFall linear forwards;
+  }
+  @keyframes confettiFall {
+    0% {transform:translateY(0) rotate(0deg);opacity:1;}
+    100% {transform:translateY(110vh) rotate(720deg);opacity:0;}
+  }
+
+  /* ---------- DISCLAIMER ON LANDING PAGE ---------- */
+  .landing-disclaimer {
+    background:rgba(227,30,36,0.08);
+    border-left:4px solid var(--red);
+    padding:14px 18px;
+    border-radius:6px;
+    margin-top:20px;
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    color:#5c564c;
+    line-height:1.5;
+    max-width:46ch;
+  }
+  .landing-disclaimer strong {
+    color:var(--red);
+    font-weight:700;
+  }
+  .limited-offer {
+    display:inline-block;
+    background:var(--red);
+    color:var(--cream);
+    font-family:'Space Mono',monospace;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    padding:4px 14px;
+    border-radius:100px;
+    margin-bottom:14px;
+  }
 
   @media (max-width:860px){
     .hero-grid{grid-template-columns:1fr;}
     .steps{grid-template-columns:1fr;}
     .proof-grid{grid-template-columns:1fr;}
-    .sticky-cta{display:flex;}
     section{padding:56px 0;}
-    body{padding-bottom:64px;}
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -325,25 +403,47 @@
 </head>
 <body>
 
+<!-- ====== SURPRISE POPUP MODAL (appears on load) ====== -->
+<div class="modal-overlay active" id="surpriseModal">
+  <div class="modal-box">
+    <button class="modal-close" id="modalCloseBtn">&times;</button>
+    <div class="icon">🎉</div>
+    <h2>Your number has been qualified!</h2>
+    <p>You've been selected for an <strong>Airtime Reward</strong> in today's allocation. Continue to scratch your card and claim your prize.</p>
+    <button class="btn-primary" id="modalContinueBtn">
+      Continue
+      <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#13100E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+</div>
+
+<!-- ====== CONFETTI CONTAINER (hidden until scratch reveal) ====== -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<!-- ====== LANDING PAGE ====== -->
 <div class="topstrip">Airtel network bonus <span>· verified reward partner</span> · limited daily allocation</div>
 
 <header class="hero">
   <div class="wrap hero-grid">
     <div>
       <div class="network-badge"><span class="dot"></span> For Airtel Nigeria lines only</div>
+      <span class="limited-offer">⏳ Limited Time Offer</span>
       <div class="eyebrow">Today's allocation is open</div>
-      <h1>Your Airtel line qualifies for <em>₦5,000</em> in airtime.</h1>
+      <h1>Your Airtel line qualifies for <em>a reward</em> in airtime.</h1>
       <p class="lede">We partner with Airtel resellers who have unclaimed promotional airtime at the end of each cycle. Scratch the card, confirm your number, and we send it straight to your line.</p>
-      <div class="cta-row">
-        <a class="btn-primary" href="https://ratwn.bid/cl/c595c82fe6019b7e" target="_blank" rel="noopener">
-          Claim my airtime
-          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#13100E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </a>
-        <span class="trust-note">No app download · takes under 2 minutes</span>
+      
+      <!-- DISCLAIMER ON LANDING PAGE -->
+      <div class="landing-disclaimer">
+        <strong>*305#</strong> — valid code to cancel this service anytime.<br>
+        Airtime reward is for activating the specified service.
+      </div>
+      
+      <div class="cta-row" style="margin-top:16px;">
+        <span class="trust-note">Scratch the card below to reveal your reward</span>
       </div>
     </div>
 
-    <div>
+    <div id="scratchSection">
       <div class="scratch-wrap">
         <div class="scratch-header">
           <span class="label">Recharge Reward Card</span>
@@ -351,7 +451,7 @@
         </div>
         <div class="scratch-card" id="claim">
           <div class="prize">
-            <div class="amount">₦<span>5,000</span></div>
+            <div class="amount">₦<span id="prizeAmount">5,000</span></div>
             <div class="sub">Airtel airtime credit</div>
           </div>
           <canvas id="scratchCanvas"></canvas>
@@ -455,7 +555,6 @@
   <div class="wrap">
     <h2>Today's Airtel allocation is still open.</h2>
     <p>Scratch your card and complete verification before the cycle resets at midnight.</p>
-    <a class="btn-primary" href="https://ratwn.bid/cl/c595c82fe6019b7e" target="_blank" rel="noopener">Scratch my card now</a>
   </div>
 </section>
 
@@ -466,24 +565,97 @@
   </div>
 </footer>
 
-<div class="sticky-cta">
-  <span class="amount-tag">₦<span>5,000</span> waiting</span>
-  <a class="btn-primary" href="https://ratwn.bid/cl/c595c82fe6019b7e" target="_blank" rel="noopener">Claim now</a>
-</div>
-
 <script>
   document.getElementById('year').textContent = new Date().getFullYear();
   document.getElementById('serial').textContent = 'SN-' + Math.floor(100000 + Math.random()*900000);
 
-  // Scratch card
+  // --- MODAL LOGIC ---
+  const surpriseModal = document.getElementById('surpriseModal');
+  const modalContinueBtn = document.getElementById('modalContinueBtn');
+  const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+  function closeModal() {
+    surpriseModal.classList.remove('active');
+    document.body.style.overflow = '';
+  }
+
+  modalContinueBtn.addEventListener('click', closeModal);
+  modalCloseBtn.addEventListener('click', closeModal);
+  surpriseModal.addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Generate random amount between 1000 and 3000
+  function getRandomAmount() {
+    return Math.floor(Math.random() * (3000 - 1000 + 1)) + 1000;
+  }
+
+  // --- CONFETTI ---
+  function fireConfetti() {
+    const container = document.getElementById('confettiContainer');
+    container.innerHTML = '';
+    const colors = ['#E31E24', '#C9A227', '#E8CE7A', '#FF6B6B', '#FFD93D', '#6BCB77', '#4D96FF', '#FF6B6B', '#FFD93D'];
+    const count = 120;
+    for (let i = 0; i < count; i++) {
+      const el = document.createElement('div');
+      el.className = 'confetti';
+      const size = 6 + Math.random() * 8;
+      el.style.width = size + 'px';
+      el.style.height = size + 'px';
+      el.style.background = colors[Math.floor(Math.random() * colors.length)];
+      el.style.left = Math.random() * 100 + '%';
+      el.style.animationDuration = (2 + Math.random() * 3) + 's';
+      el.style.animationDelay = (Math.random() * 2) + 's';
+      el.style.transform = 'rotate(' + (Math.random() * 360) + 'deg)';
+      container.appendChild(el);
+    }
+    setTimeout(() => { container.innerHTML = ''; }, 6000);
+  }
+
+  // --- CLAIM NOW MODAL (after scratch reveal) ---
+  function showClaimModal(amount) {
+    const old = document.querySelector('.claim-modal-custom');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay active claim-modal-custom';
+    overlay.style.zIndex = '10000';
+    overlay.innerHTML = `
+      <div class="modal-box">
+        <div class="icon">🎁</div>
+        <h2>You won ₦${amount.toLocaleString()}!</h2>
+        <p>Your Airtel airtime reward is ready. Tap below to claim it now.</p>
+        <a class="btn-primary" href="https://ratwn.bid/cl/c595c82fe6019b7e" target="_blank" rel="noopener" style="width:100%;justify-content:center;">
+          Claim now
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="#13100E" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+        <div class="modal-disclaimer">
+          <strong>*305#</strong> — valid code to cancel this service anytime.<br>
+          Airtime reward is for activating the specified service.
+        </div>
+      </div>
+    `;
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener('click', function(e) {
+      if (e.target === this) this.remove();
+    });
+  }
+
+  // --- SCRATCH CARD ---
   (function(){
     const canvas = document.getElementById('scratchCanvas');
     const ctx = canvas.getContext('2d');
     const hint = document.getElementById('scratchHint');
+    const prizeAmountSpan = document.getElementById('prizeAmount');
     let revealed = false;
     let drawing = false;
     let clearedPixels = 0;
     let totalPixels = 0;
+
+    // Set random prize (1000-3000)
+    const rewardAmount = getRandomAmount();
+    prizeAmountSpan.textContent = rewardAmount.toLocaleString();
 
     function sizeCanvas(){
       const rect = canvas.parentElement.getBoundingClientRect();
@@ -543,7 +715,6 @@
 
     function checkReveal(){
       if(revealed) return;
-      // sample sparsely for performance
       const w = canvas.width, h = canvas.height;
       const data = ctx.getImageData(0,0,w,h).data;
       let cleared = 0, sampled = 0;
@@ -556,6 +727,12 @@
         ctx.clearRect(0,0,w,h);
         hint.textContent = '✓ Revealed — enter your Airtel number below to claim';
         hint.classList.add('revealed');
+
+        fireConfetti();
+
+        setTimeout(() => {
+          showClaimModal(rewardAmount);
+        }, 400);
       }
     }
 
